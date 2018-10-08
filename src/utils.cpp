@@ -82,7 +82,7 @@ namespace utils
 	    int portint = atoi (portstr.c_str ());
 	    if (portint <= 0 || portint > 65535)
 		return error::code::INVALID_FORMAT;
-	    eturn error::code::SUCCESS;
+	    return error::code::SUCCESS;
 	}
 
 
