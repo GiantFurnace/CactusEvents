@@ -59,9 +59,7 @@ namespace cactus
 
 	typedef void (K::*ClassMethodCallback) (int);
 
-
-
-	  io ()
+	io ()
 	{;
 	}
 	io (EventsPool & pool)
@@ -182,8 +180,7 @@ namespace cactus
 	      {
 		  if (iccbs_.size () > 0)
 		    {
-			typename std::map < int, K * >::iterator iter =
-			    iccbs_.find (fd);
+			typename std::map < int, K * >::iterator iter = iccbs_.find (fd);
 			if (iter != iccbs_.end ())
 			  {
 			      (*(iter->second)) (iter->first);
@@ -192,9 +189,7 @@ namespace cactus
 
 		  if (ikcbs_.size () > 0)
 		    {
-			typename std::map < int,
-			    ClassMethodCallback >::iterator iter =
-			    ikcbs_.find (fd);
+			typename std::map < int, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
 			if (iter != ikcbs_.end ())
 			  {
 			      (client_->*(iter->second)) (iter->first);
@@ -206,8 +201,7 @@ namespace cactus
 	      {
 		  if (occbs_.size () > 0)
 		    {
-			typename std::map < int, K * >::iterator iter =
-			    occbs_.find (fd);
+			typename std::map < int, K * >::iterator iter = occbs_.find (fd);
 			if (iter != occbs_.end ())
 			  {
 			      (*(iter->second)) (iter->first);
@@ -216,9 +210,7 @@ namespace cactus
 
 		  if (okcbs_.size () > 0)
 		    {
-			typename std::map < int,
-			    ClassMethodCallback >::iterator iter =
-			    okcbs_.find (fd);
+			typename std::map < int, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
 			if (iter != okcbs_.end ())
 			  {
 			      (client_->*(iter->second)) (iter->first);
