@@ -114,9 +114,7 @@ namespace cactus
 
 	    if (!pending_)
 	      {
-		  int ret =
-		      utils::net::writeBuffer (sockfds_[1], buffer,
-					       bufferSize);
+		  int ret = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
 		  pending_ = true;
 	      }
 
