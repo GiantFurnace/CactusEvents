@@ -4,15 +4,15 @@
  * Copyright (c) 2018-2028 chenzhengqiang 642346572@qq.com 
  * All rights reserved since 2018-10-04
  *
- * Redistribution and use in source and binary forms, with or without modifica-
- * tion, are permitted provided that the following conditions are met:
+ * RedistributIOn and use in source and binary forms, with or without modifica-
+ * tIOn, are permitted provided that the following conditIOns are met:
  *
- *   1.  Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
+ *   1.  RedistributIOns of source code must retain the above copyright notice,
+ *       this list of conditIOns and the following disclaimer.
  *
- *   2.  Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
+ *   2.  RedistributIOns in binary form must reproduce the above copyright
+ *       notice, this list of conditIOns and the following disclaimer in the
+ *       documentatIOn and/or other materials provided with the distributIOn.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MER-
@@ -26,14 +26,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License ("GPL") version 2 or any later version,
- * in which case the provisions of the GPL are applicable instead of
- * the above. If you wish to allow the use of your version of this file
+ * the GNU General Public License ("GPL") versIOn 2 or any later versIOn,
+ * in which case the provisIOns of the GPL are applicable instead of
+ * the above. If you wish to allow the use of your versIOn of this file
  * only under the terms of the GPL and not to allow others to use your
- * version of this file under the BSD license, indicate your decision
- * by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL. If you do not delete the
- * provisions above, a recipient may use your version of this file under
+ * versIOn of this file under the BSD license, indicate your decisIOn
+ * by deleting the provisIOns above and replace them with the notice
+ * and other provisIOns required by the GPL. If you do not delete the
+ * provisIOns above, a recipient may use your versIOn of this file under
  * either the BSD or the GPL.
  */
 
@@ -49,20 +49,20 @@
 namespace cactus
 {
 
-    template < typename K > class io:virtual public Event
+    template < typename K > class IO:virtual public Event
     {
       public:
 	/*
-	   @note:common function callback differs from c++ class's member function
+	   @note:common functIOn callback differs from c++ class's member functIOn
 	 */
 	typedef void (*CommonCallback) (int);
 
 	typedef void (K::*ClassMethodCallback) (int);
 
-	io ()
+	IO ()
 	{;
 	}
-	io (EventsPool & pool)
+	IO (EventsPool & pool)
 	{
 	    pool.add (this);
 	}
@@ -70,9 +70,9 @@ namespace cactus
 	/*
 	 * @parameters:
 	 * fd:file descriptor
-	 * client: function object of template class 
+	 * client: functIOn object of template class 
 	 * @return:void
-	 * @desc:set the class's function object as callback with specify fd and event( read or write )
+	 * @desc:set the class's functIOn object as callback with specify fd and event( read or write )
 	 */
 	inline void set (int fd, types::events::Events event,
 			 K * client) throw ()
@@ -98,10 +98,10 @@ namespace cactus
 	/*
 	 * @parameters:
 	 * fd:file descriptor
-	 * event:types is a namespace , event specify io event of read or write
-	 * client: function object of template class
+	 * event:types is a namespace , event specify IO event of read or write
+	 * client: functIOn object of template class
 	 * @return:void
-	 * @desc:set the class's member function as callback with specify fd and event
+	 * @desc:set the class's member functIOn as callback with specify fd and event
 	 */
 	inline void set (int fd, types::events::Events event, K * client,
 			 ClassMethodCallback cb) throw ()
@@ -141,10 +141,10 @@ namespace cactus
 
       private:
 
-	io (const io &)
+	IO (const IO &)
 	{;
 	}
-	io & operator = (const io &)
+	IO & operator = (const IO &)
 	{;
 	}
 
@@ -171,7 +171,7 @@ namespace cactus
 
 
 	/*
-	   @desc::execute the callback function registered on file descriptior when io event has been triggered
+	   @desc::execute the callback functIOn registered on file descriptIOr when IO event has been triggered
 	 */
 	virtual void _execute (int fd, types::events::Events event,
 			       pthread_t pooltid) throw ()

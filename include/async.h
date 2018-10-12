@@ -59,16 +59,16 @@ namespace cactus
 {
 
 
-    class async:virtual public Event
+    class Async:virtual public Event
     {
       public:
 
-	async ():pending_ (true)
+	Async ():pending_ (true)
 	{
 	    _initialize ();
 	}
 
-	async (EventsPool & pool)
+	Async (EventsPool & pool)
 	{
 	    _initialize ();
 	    pool.add (this);
@@ -127,10 +127,10 @@ namespace cactus
 
 
       private:
-	async (const async &)
+	Async (const Async &)
 	{;
 	}
-	async & operator = (const async &)
+	Async & operator = (const Async &)
 	{;
 	}
 	virtual std::map < int, int >_getifds () const
