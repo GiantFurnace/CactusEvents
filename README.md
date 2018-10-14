@@ -2,13 +2,13 @@
 ---
 ## 1. Abstract
 What is Cactus?<br/>
-Firstly you must have a know about the select and epoll model, which are known as io MUX interface in unix<br/> 
+Firstly you must have a know about the select and epoll model, which are known as io MUX interface in unix.<br/> 
 Cactus is actually a high performance event library based on epoll，which similar to [libev https://fossies.org/dox/libev-4.24/](https://fossies.org/dox/libev-4.24/),<br/>
 but more lightweight.Also you can find another similary library, the classical [libevent http://libevent.org/](http://libevent.org/).<br/>
 
 ## 2. Why I write Cactus
 Cactus is a pure c++ library, but more lightweight as said.<br/> 
-The main reason is that I used to write code with c++, so I make up my mind to make a difference<br/>
+The main reason is that I used to write code with c++, so I make up my mind to make a difference.<br/>
 Make a difference in this world, to be a better man!<br/> 
 <br/>
 
@@ -28,7 +28,7 @@ The client is more responsible for memory's management instead of library!<br/>
 /*
 @note:
 1.all filedescriptors are nonblocking, you can call utils::net::readBuffer or 
-  utils::net::writeBufferto handle read or write
+  utils::net::writeBuffer to handle read or write
 2.the main event object are cactus:IO,cactus:Async,cactus:Timer, all are template class 
    defined in namespace cactus
 */
