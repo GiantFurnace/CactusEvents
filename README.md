@@ -27,8 +27,10 @@ The client is more responsible for memory's management instead of library!<br/>
 
 /*
 @note:
-1.all filedescriptors are nonblocking, you can call utils::net::readBuffer or utils::net::writeBufferto handle read or write
-2.the main event object are cactus:IO,cactus:Async,cactus:Timer, all are template class defined in namespace cactus
+1.all filedescriptors are nonblocking, you can call utils::net::readBuffer or 
+  utils::net::writeBufferto handle read or write
+2.the main event object are cactus:IO,cactus:Async,cactus:Timer, all are template class 
+   defined in namespace cactus
 */
 
 
@@ -45,7 +47,7 @@ public:
   {
      int data;
      int bytes = utils::net::readBuffer (son.fd, &data, sizeof (data));
-      // std::cout<<"functor callback has been triggered"<<std::endl;
+     // std::cout<<"functor callback has been triggered"<<std::endl;
   }
   
   // cactus also supports member function as callback 
@@ -68,9 +70,9 @@ public:
     if (count > 10)
     {
         //using kill interface to unregister the callback
-	      (son.pool)->kill (son);
-	      timer.set (2000, this, &Callback::newTimerCallback);
-	      timer.join (*(son.pool));
+	(son.pool)->kill (son);
+	timer.set (2000, this, &Callback::newTimerCallback);
+	timer.join (*(son.pool));
     }
   }
 
@@ -90,9 +92,9 @@ void * async_entry (void *arg)
   while (true)
   {
       if (!async.pending ())
-	    {
-	      int bytes = async.send (&data, sizeof (data));
-	    }
+      {
+          int bytes = async.send (&data, sizeof (data));
+      }
   }
 }
 
