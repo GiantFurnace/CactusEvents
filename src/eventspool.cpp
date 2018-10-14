@@ -324,7 +324,6 @@ namespace cactus
 			return;
 		}
 
-		
 		while (status_ == 0)
 		{
 			int ret = epoll_wait (epollfd_, epoll_events_, MAX_EVENTS_SIZE, -1);
