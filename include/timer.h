@@ -59,11 +59,10 @@ extern int errno;
 namespace cactus
 {
 
-	template < typename K >
+    template < typename K >
     class Timer:virtual public Event
     {
       public:
-
 
 	typedef void (K::*ClassMethodCallback) (const EventSon &);
 
@@ -85,10 +84,10 @@ namespace cactus
 	 */
 	inline void set (size_t took, K * client) throw ()
 	{
-		ifds_.insert (std::make_pair (took, types::events::TIMER));
-		ikcbs_.erase (took);
-		iccbs_.erase (took);
-		iccbs_.insert (std::make_pair (took, client));
+	    ifds_.insert (std::make_pair (took, types::events::TIMER));
+	    ikcbs_.erase (took);
+	    iccbs_.erase (took);
+	    iccbs_.insert (std::make_pair (took, client));
 	}
 
 
@@ -101,11 +100,11 @@ namespace cactus
 	 */
 	inline void set (size_t took, K * client, ClassMethodCallback cb) throw ()
 	{
-		ifds_.insert (std::make_pair (took, types::events::TIMER));
-		iccbs_.erase (took);
-		ikcbs_.erase (took);
-		ikcbs_.insert (std::make_pair (took, cb));
-		client_ = client;
+	    ifds_.insert (std::make_pair (took, types::events::TIMER));
+	    iccbs_.erase (took);
+	    ikcbs_.erase (took);
+	    ikcbs_.insert (std::make_pair (took, cb));
+	    client_ = client;
 	}
 
 
@@ -144,35 +143,35 @@ namespace cactus
 
 	    if ( son.type == types::events::READ )
 	    {
-			if (iccbs_.size () > 0)
-			{
-				typename std::map < size_t, K * >::iterator iter = iccbs_.begin();
-				if (iter != iccbs_.end ())
-				{
-					(*(iter->second)) (son);
-					++iter;
-				}
-			}
-
-			if (ikcbs_.size () > 0)
+		if (iccbs_.size () > 0)
+		{
+		    typename std::map < size_t, K * >::iterator iter = iccbs_.begin();
+		    if (iter != iccbs_.end ())
 		    {
-				typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.begin();
-				if (iter != ikcbs_.end ())
-				{
-					(client_->*(iter->second)) (son);
-					++iter;
-				}
+			(*(iter->second)) (son);
+			++iter;
 		    }
+		}
+
+		if (ikcbs_.size () > 0)
+		{
+		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.begin();
+		    if (iter != ikcbs_.end ())
+		    {
+		        (client_->*(iter->second)) (son);
+			++iter;
+		    }
+		}
 
 	    }
 
 	}
 
     private:
-		std::map < size_t, size_t > ifds_;
-		std::map < size_t, K * >iccbs_;
-		std::map < size_t, ClassMethodCallback > ikcbs_;
-		K * client_;
+	std::map < size_t, size_t > ifds_;
+	std::map < size_t, K * >iccbs_;
+	std::map < size_t, ClassMethodCallback > ikcbs_;
+	K * client_;
     };
 
 }
