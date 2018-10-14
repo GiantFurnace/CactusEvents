@@ -9,7 +9,7 @@ SUFFIX:=cpp
 vpath %.h $(INCLUDE_DIR)
 vpath %.$(SUFFIX) $(SOURCE_DIR)
 
-TARGET:=go
+TARGET:=cactus
 CC0:=g++
 CC1:=g++
 #define the optimize level of compiler
@@ -17,7 +17,7 @@ OLEVEL=0
 LDCONFIG:=-lpthread
 COMPILER_FLAGS=-pg -g -W -Wall -Wextra -Wconversion -Wshadow
 CFLAGS:=-O$(OLEVEL) $(COMPILER_FLAGS) $(LDCONFIG)
-OBJS:=main utils eventspool 
+OBJS:=cactus_samplecode utils eventspool 
 OBJS:=$(foreach obj,$(OBJS),$(obj).o)
 
 INSTALL_DIR:=/usr/local/bin
