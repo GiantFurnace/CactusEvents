@@ -57,11 +57,10 @@ extern int errno;
 namespace cactus
 {
 
-	template < typename K >
+    template < typename K >
     class Async:virtual public Event
     {
       public:
-
 
 	typedef void (K::*ClassMethodCallback) ( const EventSon & son);
 
@@ -107,26 +106,26 @@ namespace cactus
 	int send (void *buffer, size_t bufferSize)
 	{
 	    tid_ = pthread_self ();
-		/*
-		* @note:it's necessary to lock if sender and receiver are not in the same loop,
-		*/
+	    /*
+	    * @note:it's necessary to lock if sender and receiver are not in the same loop,
+	    */
 	    if (!pthread_equal (tid_, pooltid_))
 	    {
-			Event::_lock ();
+		Event::_lock ();
 	    }
 
-		int bytes = 0;
+	    int bytes = 0;
 	    if (!pending_)
 	    {
-			bytes = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
-			pending_ = true;
+		bytes = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
+		pending_ = true;
 	    }
 
 	    if (!pthread_equal (tid_, pooltid_))
 	    {
-			Event::_unlock ();
+		Event::_unlock ();
 	    }
-		return  bytes;
+	    return  bytes;
 	}
 
 
@@ -138,9 +137,9 @@ namespace cactus
 	 */
 	inline void set (K * client) throw ()
 	{
-		ikcbs_.erase (sockfds_[0]);
-		iccbs_.erase (sockfds_[0]);
-		iccbs_.insert (std::make_pair (sockfds_[0], client));
+	    ikcbs_.erase (sockfds_[0]);
+	    iccbs_.erase (sockfds_[0]);
+	    iccbs_.insert (std::make_pair (sockfds_[0], client));
 	}
 
 
@@ -153,10 +152,10 @@ namespace cactus
 	 */
 	inline void set (K * client, ClassMethodCallback cb) throw ()
 	{
-		client_ = client;
-		iccbs_.erase (sockfds_[0]);
-		ikcbs_.erase (sockfds_[0]);
-		ikcbs_.insert (std::make_pair (sockfds_[0], cb));
+	    client_ = client;
+	    iccbs_.erase (sockfds_[0]);
+	    ikcbs_.erase (sockfds_[0]);
+	    ikcbs_.insert (std::make_pair (sockfds_[0], cb));
 	}
 
 
@@ -186,11 +185,11 @@ namespace cactus
 	    int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, sockfds_);
 	    if (ret < 0)
 	    {
-			throw std::runtime_error (strerror (errno));
+		throw std::runtime_error (strerror (errno));
 	    }
 
 	    ifds_.insert (std::make_pair (sockfds_[0], types::events::ASYNC));
-		ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
+	    ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
 	}
 
 
@@ -204,51 +203,50 @@ namespace cactus
 	    pooltid_ = son.tid;
 	    if ( son.type == types::events::READ )
 	    {
-			if (!pthread_equal (tid_, pooltid_))
-		    {
-				Event::_lock ();
-		    }
+	        if (!pthread_equal (tid_, pooltid_))
+	        {
+		    Event::_lock ();
+	        }
 			
-			if (iccbs_.size () > 0)
-			{
-				typename std::map < size_t, K * >::iterator iter = iccbs_.find (son.fd);
-				if (iter != iccbs_.end ())
-				{
-					(*(iter->second)) (son);
-				}
-			}
-
-			if (ikcbs_.size () > 0)
-		    {
-				typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (son.fd);
-				if (iter != ikcbs_.end ())
-				{
-					(client_->*(iter->second)) (son);
-				}
-		    }
-
-			pending_ = true;
-
-			if (!pthread_equal (tid_, pooltid_))
-		    {
-				Event::_unlock ();
-		    }
-		
-	    }
-		else
+		if (iccbs_.size () > 0)
 		{
-			if (!pthread_equal (tid_, pooltid_))
+		    typename std::map < size_t, K * >::iterator iter = iccbs_.find (son.fd);
+		    if (iter != iccbs_.end ())
 		    {
-				Event::_lock ();
-		    }
-			
-		    pending_ = false;
-
-		    if (!pthread_equal (tid_, pooltid_))
-		    {
-				Event::_unlock ();
+			(*(iter->second)) (son);
 		    }
 		}
+
+		if (ikcbs_.size () > 0)
+		{
+		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (son.fd);
+		    if (iter != ikcbs_.end ())
+		    {
+			(client_->*(iter->second)) (son);
+		    }
+		}
+
+	        pending_ = true;
+
+		if (!pthread_equal (tid_, pooltid_))
+		{
+		    Event::_unlock ();
+		}
+		
+	     }
+	     else
+	     {
+		if (!pthread_equal (tid_, pooltid_))
+		{
+		    Event::_lock ();
+		}
+			
+		pending_ = false;
+		if (!pthread_equal (tid_, pooltid_))
+		{
+		    Event::_unlock ();
+		}
+            }
 
 	}
 
