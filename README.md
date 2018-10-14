@@ -27,7 +27,7 @@ The client is more responsible for memory's management instead of library!<br/>
 
 /*
 @note:
-1.all filedescriptors are nonblocking, you can call utils::net::readBuffer or 
+1.all file descriptors are nonblocking, you can call utils::net::readBuffer or 
   utils::net::writeBuffer to handle read or write
 2.the main event object are cactus:IO,cactus:Async,cactus:Timer, all are template class 
    defined in namespace cactus
