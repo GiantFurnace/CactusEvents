@@ -79,17 +79,17 @@ namespace cactus
 	{
 	    if (event == types::events::READ)
 	    {
-			ikcbs_.erase (fd);
-			iccbs_.erase (fd);
-			iccbs_.insert (std::make_pair (fd, client));
-			ifds_.insert (std::make_pair (fd, types::events::IO));
+		ikcbs_.erase (fd);
+		iccbs_.erase (fd);
+		iccbs_.insert (std::make_pair (fd, client));
+		ifds_.insert (std::make_pair (fd, types::events::IO));
 	    }
 	    else if (event == types::events::WRITE)
 	    {
-			okcbs_.erase (fd);
-			occbs_.erase (fd);
-			occbs_.insert (std::make_pair (fd, client));
-			ofds_.insert (std::make_pair (fd, types::events::IO));
+		okcbs_.erase (fd);
+		occbs_.erase (fd);
+		occbs_.insert (std::make_pair (fd, client));
+		ofds_.insert (std::make_pair (fd, types::events::IO));
 	    }
 	}
 
@@ -108,17 +108,17 @@ namespace cactus
 	    client_ = client;
 	    if (event == types::events::READ)
 	    {
-			iccbs_.erase (fd);
-			ikcbs_.erase (fd);
-			ikcbs_.insert (std::make_pair (fd, cb));
-			ifds_.insert (std::make_pair (fd, types::events::IO));
+		iccbs_.erase (fd);
+		ikcbs_.erase (fd);
+		ikcbs_.insert (std::make_pair (fd, cb));
+		ifds_.insert (std::make_pair (fd, types::events::IO));
 	    }
 	    else if (event == types::events::WRITE)
 	    {
-			occbs_.erase (fd);
-			okcbs_.erase (fd);
-			okcbs_.insert (std::make_pair (fd, cb));
-			ofds_.insert (std::make_pair (fd, types::events::IO));
+		occbs_.erase (fd);
+		okcbs_.erase (fd);
+		okcbs_.insert (std::make_pair (fd, cb));
+		ofds_.insert (std::make_pair (fd, types::events::IO));
 	    }
 	}
 
@@ -172,46 +172,46 @@ namespace cactus
 	 */
 	virtual void _execute (const EventSon & son) throw ()
 	{
-		size_t fd = son.fd;
+	    size_t fd = son.fd;
 	    if (son.type == types::events::READ)
 	    {
-			if (iccbs_.size () > 0)
-			{
-				typename std::map < size_t, K * >::iterator iter = iccbs_.find (fd);
-				if (iter != iccbs_.end ())
-				{
-					(*(iter->second)) (son);
-				}
-			}
-
-			if (ikcbs_.size () > 0)
+		if (iccbs_.size () > 0)
+		{
+		    typename std::map < size_t, K * >::iterator iter = iccbs_.find (fd);
+		    if (iter != iccbs_.end ())
 		    {
-				typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
-				if (iter != ikcbs_.end ())
-				{
-					(client_->*(iter->second)) (son);
-				}
+			(*(iter->second)) (son);
 		    }
+		}
+
+		if (ikcbs_.size () > 0)
+		{
+		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
+		    if (iter != ikcbs_.end ())
+		    {
+			(client_->*(iter->second)) (son);
+		    }
+		}
 	      }
 
-		  else
+	      else
 	      {
-			if (occbs_.size () > 0)
+		    if (occbs_.size () > 0)
 		    {
-				typename std::map < size_t, K * >::iterator iter = occbs_.find (fd);
-				if (iter != occbs_.end ())
-				{
-					(*(iter->second)) (son);
-				}
+			typename std::map < size_t, K * >::iterator iter = occbs_.find (fd);
+			if (iter != occbs_.end ())
+			{
+				(*(iter->second)) (son);
+			}
 		    }
 
-			if (okcbs_.size () > 0)
+		    if (okcbs_.size () > 0)
 		    {
-				typename std::map < size_t, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
-				if (iter != okcbs_.end ())
-				{
-					(client_->*(iter->second)) (son);
-				}
+			typename std::map < size_t, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
+			if (iter != okcbs_.end ())
+			{
+				(client_->*(iter->second)) (son);
+			}
 		    }
 	      }
 
