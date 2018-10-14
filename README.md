@@ -129,7 +129,7 @@ int main (int argc, char **argv)
   
 ```
 
-## 4. Contact
+## 5. Contact
 
 |Author          | Email            | Wechat      |
 | ---------------|:----------------:| -----------:|
@@ -137,5 +137,5 @@ int main (int argc, char **argv)
 
 **Notice:  Any comments and suggestions are welcomed**
 
-## 5. License
+## 6. License
 [Apache License 2.0](./LICENSE)
