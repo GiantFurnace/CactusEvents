@@ -51,17 +51,19 @@
 #include <stdexcept>
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>
 extern int errno;
 
 
 namespace cactus
 {
 
-
+	template < typename K >
     class Async:virtual public Event
     {
       public:
+
+
+	typedef void (K::*ClassMethodCallback) ( const EventSon & son);
 
 	Async ():pending_ (true)
 	{
@@ -75,11 +77,6 @@ namespace cactus
 	    pooltid_ = pool.gettid ();
 	}
 
-
-	struct AsyncData
-	{
-	    int fd;
-	};
 
 
 	/*
@@ -103,58 +100,97 @@ namespace cactus
 	}
 
 
-
-	void send (void *buffer, size_t bufferSize)
+	/*
+	 * @desc: send the buffer to event loop, return the bytes that have been sent,
+	 *   write error occurred if returns -1
+	 */
+	int send (void *buffer, size_t bufferSize)
 	{
 	    tid_ = pthread_self ();
+		/*
+		* @note:it's necessary to lock if sender and receiver are not in the same loop,
+		*/
 	    if (!pthread_equal (tid_, pooltid_))
-	      {
-		  Event::_lock ();
-	      }
+	    {
+			Event::_lock ();
+	    }
 
+		int bytes = 0;
 	    if (!pending_)
-	      {
-		  int ret = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
-		  pending_ = true;
-	      }
+	    {
+			bytes = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
+			pending_ = true;
+	    }
 
 	    if (!pthread_equal (tid_, pooltid_))
-	      {
-		  Event::_unlock ();
-	      }
+	    {
+			Event::_unlock ();
+	    }
+		return  bytes;
+	}
+
+
+	/*
+	 * @parameters:
+	 * client: function object of template class 
+	 * @return:void
+	 * @desc:set the class's function object as callback for async read event 
+	 */
+	inline void set (K * client) throw ()
+	{
+		ikcbs_.erase (sockfds_[0]);
+		iccbs_.erase (sockfds_[0]);
+		iccbs_.insert (std::make_pair (sockfds_[0], client));
 	}
 
 
 
-      private:
+	/*
+	 * @parameters:
+	 * client: function object of template class
+	 * @return:void
+	 * @desc:set the class's member function as callback for async read event
+	 */
+	inline void set (K * client, ClassMethodCallback cb) throw ()
+	{
+		client_ = client;
+		iccbs_.erase (sockfds_[0]);
+		ikcbs_.erase (sockfds_[0]);
+		ikcbs_.insert (std::make_pair (sockfds_[0], cb));
+	}
+
+
+
+    private:
 	Async (const Async &)
 	{;
 	}
 	Async & operator = (const Async &)
 	{;
 	}
-	virtual std::map < int, int >_getifds () const
+
+	virtual std::map < size_t, size_t >_getifds () const
 	{
 	    return ifds_;
 	}
-	virtual std::map < int, int >_getofds () const
+	virtual std::map < size_t, size_t >_getofds () const
 	{
 	    return ofds_;
 	}
 
 	inline void _initialize ()
 	{
+		
 	    tid_ = pthread_self ();
 	    pooltid_ = pthread_self ();
 	    int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, sockfds_);
 	    if (ret < 0)
-	      {
-		  throw std::runtime_error (strerror (errno));
-	      }
+	    {
+			throw std::runtime_error (strerror (errno));
+	    }
 
 	    ifds_.insert (std::make_pair (sockfds_[0], types::events::ASYNC));
-	    ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
-
+		ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
 	}
 
 
@@ -162,48 +198,72 @@ namespace cactus
 	/*
 	   @desc::execute the callback function registered on file descriptior when io event has been triggered
 	 */
-	virtual void _execute (int fd, types::events::Events event,
-			       pthread_t pooltid) throw ()
+	virtual void _execute (const EventSon & son) throw ()
 	{
-
-	    pooltid_ = pooltid;
-	    switch (event)
-	      {
-	      case types::events::READ:
-		  if (!pthread_equal (tid_, pooltid))
+	
+	    pooltid_ = son.tid;
+	    if ( son.type == types::events::READ )
+	    {
+			if (!pthread_equal (tid_, pooltid_))
 		    {
-			Event::_lock ();
+				Event::_lock ();
+		    }
+			
+			if (iccbs_.size () > 0)
+			{
+				typename std::map < size_t, K * >::iterator iter = iccbs_.find (son.fd);
+				if (iter != iccbs_.end ())
+				{
+					(*(iter->second)) (son);
+				}
+			}
+
+			if (ikcbs_.size () > 0)
+		    {
+				typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (son.fd);
+				if (iter != ikcbs_.end ())
+				{
+					(client_->*(iter->second)) (son);
+				}
 		    }
 
-		  if (!pthread_equal (tid_, pooltid))
-		    {
-			Event::_unlock ();
-		    }
-		  break;
-	      case types::events::WRITE:
-		  if (!pthread_equal (tid_, pooltid))
-		    {
-			Event::_lock ();
-		    }
+			pending_ = true;
 
-		  pending_ = false;
-
-		  if (!pthread_equal (tid_, pooltid))
+			if (!pthread_equal (tid_, pooltid_))
 		    {
-			Event::_unlock ();
+				Event::_unlock ();
 		    }
-		  break;
-	      }
+		
+	    }
+		else
+		{
+			if (!pthread_equal (tid_, pooltid_))
+		    {
+				Event::_lock ();
+		    }
+			
+		    pending_ = false;
+
+		    if (!pthread_equal (tid_, pooltid_))
+		    {
+				Event::_unlock ();
+		    }
+		}
 
 	}
 
-      private:
-	std::map < int, int >ifds_;
-	std::map < int, int >ofds_;
+    private:
+	
+	std::map < size_t, size_t > ifds_;
+	std::map < size_t, size_t > ofds_;
+	std::map < size_t, K * >iccbs_;
+	std::map < size_t, ClassMethodCallback > ikcbs_;
+
 	bool pending_;
 	int sockfds_[2];
 	pthread_t tid_;
 	pthread_t pooltid_;
+	K * client_;
     };
 
 }

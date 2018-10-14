@@ -11,4 +11,8 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdint.h>
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include <signal.h>
 #endif

@@ -39,73 +39,100 @@
 
 
 
-#ifndef _BACKER_CACTUS_EVENTLOOP_H_
-#define  _BACKER_CACTUS_EVENTLOOP_H_
+#ifndef _BACKER_CACTUS_EVENTSPOOL_H_
+#define  _BACKER_CACTUS_EVENTSPOOL_H_
 
-
-#include "event.h"
-#include <vector>
+#include "sys_common.h"
+#include "types.h"
 #include <map>
+#include <vector>
+#include <utility>
 #include <sys/epoll.h>
-#include <pthread.h>
-
-
 
 namespace cactus
 {
+	class Event;
+	class EventSon;
 
     class EventsPool
     {
+		friend class Event;
       public:
-	enum
-	{
-	    MAX_EVENTS_SIZE = 65535
-	};
+		enum
+		{
+			MAX_EVENTS_SIZE = 65535
+		};
 
-	  EventsPool () throw ();
-	 ~EventsPool () throw ();
+		struct Item
+		{
+			cactus::Event * observer;
+			types::events::Objects object;
+		};
 
-	inline void add (cactus::Event * observer) throw ()
-	{
-	    observers_.push_back (observer);
-	}
-	inline pthread_t gettid () const
-	{
-	    return tid_;
-	}
-	void run (int status = 0) throw ();
 
+		 EventsPool () throw ();
+		~EventsPool () throw ();
+
+		inline void add (cactus::Event * observer, types::events::Objects object=types::events::ANY) throw ()
+		{
+			
+			if ( events_.count(observer) > 0 )
+			{
+				return;
+			}
+
+		    events_.insert( std::make_pair( observer, object));
+			Item item;
+			item.observer = observer;
+			item.object = object;
+			observers_.push_back(item);
+		}
+
+		inline pthread_t gettid () const
+		{
+			return tid_;
+		}
+		void run (int status = 0) throw ();
+		void kill( const EventSon & son) throw();
 
       private:
 
-	EventsPool (const EventsPool &)
-	{;
-	}
-	EventsPool & operator = (const EventsPool &)
-	{;
-	}
+		EventsPool (const EventsPool &)
+		{;
+		}
+		EventsPool & operator = (const EventsPool &)
+		{;
+		}
 
-	void _initialize () throw ();
-	inline void _register (int fd, types::events::Events event) throw ();
-	inline void _remove (int fd) throw ();
+		bool _prepare () throw ();
+		inline void _register (int fd, types::events::Events event) throw ();
+		inline void _remove (int fd) throw ();
 
-	void _clear () throw ();
-	void _notify () throw ();
+		void _clear () throw ();
+		void _notify () throw ();
 
-      private:
+		bool _initialize_timer(size_t took, bool once=false) throw();
+		static void _timer_entry(int);
 
-	std::vector < cactus::Event * >observers_;
-	std::map < int, int >ifds_;
-	std::map < int, int >ofds_;
-	std::map < int, cactus::Event * >iobservers_;
-	std::map < int, cactus::Event * >oobservers_;
+	  private:
+		
+		std::vector <Item> observers_;
+		std::map<cactus::Event *, types::events::Objects> events_;
 
-	int epollfd_;
-	epoll_event epoll_events_[MAX_EVENTS_SIZE];
-	int status_;
-	int event_trigger_;
-	pthread_t tid_;
+		std::map < size_t, size_t >ifds_;
+		std::map < size_t, size_t >ofds_;
+		std::map < size_t, cactus::Event * >iobservers_;
+		std::map < size_t, cactus::Event * >oobservers_;
 
+		int epollfd_;
+		epoll_event epoll_events_[MAX_EVENTS_SIZE];
+		int status_;
+		int event_trigger_;
+		pthread_t tid_;
+		bool timer_;
+		size_t timerTook_;
+		size_t prevSize_;
+		size_t curSize_;
 
     };
 

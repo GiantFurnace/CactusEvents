@@ -41,62 +41,79 @@
 #define  _BACKER_CACTUS_EVENT_H_
 
 #include "types.h"
+#include "eventspool.h"
 #include <map>
 #include <pthread.h>
 
-class EventsPool;
+
 
 namespace cactus
 {
+	class EventSon;
+	using cactus::EventsPool;
     /*
      * Event class is the base class of async, io, timer
      */
     class Event
     {
-	friend class EventsPool;
+		friend class EventsPool;
+    protected:
+		Event ()
+		{
+			pthread_mutex_init (&mutex_, 0);
+		}
+		~Event ()
+		{
+			pthread_mutex_destroy (&mutex_);
+		}
+		inline void _lock ()
+		{
+			pthread_mutex_lock (&mutex_);
+		}
+		inline void _unlock ()
+		{
+			pthread_mutex_unlock (&mutex_);
+		}
 
-      protected:
-	  Event ()
-	{
-	    pthread_mutex_init (&mutex_, 0);
-	}
-	 ~Event ()
-	{
-	    pthread_mutex_destroy (&mutex_);
-	}
-	inline void _lock ()
-	{
-	    pthread_mutex_lock (&mutex_);
-	}
-	inline void _unlock ()
-	{
-	    pthread_mutex_unlock (&mutex_);
-	}
+	private:
+		Event (const Event &)
+		{;
+		}
+		Event & operator = (const Event &)
+		{;
+		}
 
-      private:
-	Event (const Event &)
-	{;
-	}
-	Event & operator = (const Event &)
-	{;
-	}
+    private:
+		virtual std::map < size_t, size_t >_getifds () const
+		{
+			return std::map < size_t, size_t >();
+		}
+		virtual std::map < size_t, size_t >_getofds () const
+		{
+			return std::map < size_t, size_t >();
+		}
+		virtual void _execute ( const EventSon &)
+		{;
+		}
 
-      private:
-	virtual std::map < int, int >_getifds () const
-	{
-	    return std::map < int, int >();
-	}
-	virtual std::map < int, int >_getofds () const
-	{
-	    return std::map < int, int >();
-	}
-	virtual void _execute (int, types::events::Events, pthread_t)
-	{;
-	}
-
-      private:
+    private:
 	pthread_mutex_t mutex_;
+
     };
+
+	class EventSon
+	{
+		friend class EventsPool;
+		public:
+			size_t fd;
+			types::events::Events  type;
+			types::events::Objects object;
+			pthread_t tid;
+			EventsPool * pool;
+			int error;
+		private:
+			Event * _event;
+	};
 }
 
 #endif

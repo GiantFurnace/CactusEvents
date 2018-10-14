@@ -62,8 +62,10 @@ namespace types
 	 */
 	enum Objects
 	{
-	    IO,
-	    ASYNC
+	    IO=100,
+	    ASYNC,
+		TIMER,
+		ANY
 	};
 
 
