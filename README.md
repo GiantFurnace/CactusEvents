@@ -1,7 +1,7 @@
 # Cactus:World Fades Away,But You Stay
 ---
 ## 1. Abstract
-what is Cactus?<br/>
+What is Cactus?<br/>
 Firstly you must have a know about the select and epoll model, which are known as io MUX interface in unix<br/> 
 Cactus is actually a high performance event library based on epoll，which similar to [libev https://fossies.org/dox/libev-4.24/](https://fossies.org/dox/libev-4.24/),<br/>
 but more lightweight.Also you can find another similary library, the classical [libevent http://libevent.org/](http://libevent.org/).<br/>
@@ -25,11 +25,15 @@ The client is more responsible for memory's management instead of library!<br/>
 #include "timer.h"
 #include <iostream>
 
+/*
+@note:
+1.all filedescriptors are nonblocking, you can call utils::net::readBuffer or utils::net::writeBufferto handle read or write
+2.the main event object are cactus:IO,cactus:Async,cactus:Timer, all are template class defined in namespace cactus
+*/
+
 
 int count = 0;
-
 // defines callback class for callback
-
 class Callback
 {
 public:
@@ -48,7 +52,6 @@ public:
   void asyncReadCallback (const cactus::EventSon & son)
   {
     int data;
-    //all filedescriptors are nonblocking
     int bytes = utils::net::readBuffer (son.fd, &data, sizeof (data));
     //std::cout<<"member callback has been triggered"<<std::endl;
   }
@@ -100,11 +103,18 @@ int main (int argc, char **argv)
   pthread_create (&tid, 0, async_entry, 0);
   Callback callback;
   cactus::EventsPool eventPool;
-
+  
+  
   async.set (&callback);
   async.set (&callback, &Callback::asyncReadCallback);
   async.join (eventPool);
-
+  
+  /*
+  cactus::IO < Callback > stdin;
+  stdin.set(STDIN_FILENO, types::events::READ, &callback);
+  stdin.join(eventPool);
+  */
+  
   cactus::Timer < Callback > timer;
   timer.set (800, &callback, &Callback::oldTimerCallback);
   timer.join (eventPool);
