@@ -56,124 +56,123 @@ extern int errno;
 namespace cactus
 {
 
-	int SOCKFDS_TIMER[2];
+    int SOCKFDS_TIMER[2];
 
     EventsPool::EventsPool () throw ():epollfd_ (-1), status_ (0),timerTook_(0),
 	event_trigger_ (EPOLLET), timer_(false), prevSize_(0), curSize_(0)
     {
-		epollfd_ = epoll_create (1);
-		tid_ = pthread_self ();
+	epollfd_ = epoll_create (1);
+	tid_ = pthread_self ();
     }
 
 
     EventsPool::~EventsPool () throw ()
     {
-		_clear ();
+	_clear ();
     }
 
 
 
     bool EventsPool::_prepare () throw ()
     {
-		bool ret = true;
-		curSize_ = observers_.size();
-		size_t count = 0;
+	bool ret = true;
+	curSize_ = observers_.size();
+	size_t count = 0;
 
-		std::vector <Item>::reverse_iterator oiter = observers_.rbegin ();
+	std::vector <Item>::reverse_iterator oiter = observers_.rbegin ();
 		
-
-		while (oiter != observers_.rend () && ( curSize_- prevSize_) > 0 )
+	while (oiter != observers_.rend () && ( curSize_- prevSize_) > 0 )
+	{
+	    if ( (*oiter).object == types::events::TIMER )
+	    {
+		if ( timer_ )
 		{
-			if ( (*oiter).object == types::events::TIMER )
-			{
-				if ( timer_ )
-				{
-					++oiter;
-					continue;
-				}
+		    ++oiter;
+		    continue;
+	        }
 				
-				int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, SOCKFDS_TIMER);
-				if (ret < 0)
-				{
-					return false;
-				}
+		int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, SOCKFDS_TIMER);
+		if (ret < 0)
+		{
+		    return false;
+		}
 
-				std::map < size_t, size_t >ifds_timer = ((*oiter).observer)->_getifds ();
-				if ( ifds_timer.size() > 0 )
-				{
+		std::map < size_t, size_t >ifds_timer = ((*oiter).observer)->_getifds ();
+		if ( ifds_timer.size() > 0 )
+		{
 					
-					timerTook_ = (ifds_timer.begin())->first;
-					if ( timerTook_ > 0 )
-					{
-						timer_ = true;
-						_register(SOCKFDS_TIMER[0],  types::events::READ);
-						_register(SOCKFDS_TIMER[1],  types::events::WRITE);
-						ifds_.insert (std::make_pair (SOCKFDS_TIMER[0], types::events::TIMER));
-						iobservers_.insert (std::make_pair (SOCKFDS_TIMER[0],  ((*oiter).observer)));
-					}
+		    timerTook_ = (ifds_timer.begin())->first;
+		    if ( timerTook_ > 0 )
+		    {
+			timer_ = true;
+			_register(SOCKFDS_TIMER[0],  types::events::READ);
+			_register(SOCKFDS_TIMER[1],  types::events::WRITE);
+			ifds_.insert (std::make_pair (SOCKFDS_TIMER[0], types::events::TIMER));
+			iobservers_.insert (std::make_pair (SOCKFDS_TIMER[0],  ((*oiter).observer)));
+		    }
 					
-				}
+		}
 				
-				++oiter;
-				continue;
-			}
+		++oiter;
+		continue;
+		}
 
-			std::map < size_t, size_t >ifds = ((*oiter).observer)->_getifds ();
-			std::map < size_t, size_t >::iterator ifd = ifds.begin ();
+		std::map < size_t, size_t >ifds = ((*oiter).observer)->_getifds ();
+		std::map < size_t, size_t >::iterator ifd = ifds.begin ();
 
-			while (ifd != ifds.end ())
-			{
-				if (iobservers_.count (ifd->first) > 0)
-				{
-					++ifd;
-					continue;
-				}
-				else
-				{
-					ifds_.insert (std::make_pair (ifd->first, ifd->second));
-					iobservers_.insert (std::make_pair (ifd->first, (*oiter).observer));
-				}
+		while (ifd != ifds.end ())
+		{
+		    if (iobservers_.count (ifd->first) > 0)
+		    {
+			++ifd;
+			continue;
+		    }
+		    else
+		    {
+		        ifds_.insert (std::make_pair (ifd->first, ifd->second));
+			iobservers_.insert (std::make_pair (ifd->first, (*oiter).observer));
+		    }
 
-				_register (ifd->first, types::events::READ);
-				++ifd;
-			}
+		    _register (ifd->first, types::events::READ);
+		    ++ifd;
+		}
 
 	      std::map < size_t, size_t >ofds =  ((*oiter).observer)->_getofds ();
 	      std::map < size_t, size_t >::iterator ofd = ofds.begin ();
 
 	      while (ofd != ofds.end ())
-		  {
-				if (oobservers_.count (ofd->first) > 0)
-				{
-					++ofd;
-					continue;
-				}
-				else
-				{
-					ofds_.insert (std::make_pair (ofd->first, ofd->second));
-					oobservers_.insert (std::make_pair (ofd->first,  ((*oiter).observer)));
-				}
+	      {
+		   if (oobservers_.count (ofd->first) > 0)
+		    {
+			++ofd;
+			continue;
+		    }
+		    else
+		    {
+			ofds_.insert (std::make_pair (ofd->first, ofd->second));
+			oobservers_.insert (std::make_pair (ofd->first,  ((*oiter).observer)));
+		    }
 
-				_register (ofd->first, types::events::WRITE);
-				++ofd;
-		   }
+		    _register (ofd->first, types::events::WRITE);
+		    ++ofd;
+	      }
 
 	      ++oiter;
-		  ++count;
-		  if ( count == (curSize_ - prevSize_) )
-		  {
-			  break;
-		  }
-		}
+	      ++count;
+	      if ( count == (curSize_ - prevSize_) )
+	      {
+	          break;
+	      }
+	   }
 
-		prevSize_ = curSize_;
+	    prevSize_ = curSize_;
 
-		if ( timer_ )
-		{
-			ret = _initialize_timer(timerTook_, false);
-		}
+	     if ( timer_ )
+	     {
+		ret = _initialize_timer(timerTook_, false);
+	     }
 		
-		return ret;
+	    return ret;
 
     }
 
@@ -182,13 +181,13 @@ namespace cactus
 	void EventsPool::_timer_entry( int signo )
 	{
 
-		switch( signo )
-		{
-			case SIGALRM:
-				char val = 0x01;
-				utils::net::writeBuffer(SOCKFDS_TIMER[1], &val, sizeof(val));
-				break;
-		}
+	    switch( signo )
+	    {
+	    case SIGALRM:
+		char val = 0x01;
+		utils::net::writeBuffer(SOCKFDS_TIMER[1], &val, sizeof(val));
+		break;
+	    }
 
 	}
 
@@ -196,44 +195,44 @@ namespace cactus
 
 	bool EventsPool::_initialize_timer(size_t took, bool once) throw()
 	{
-		struct sigaction sa;
-		memset(&sa, '\0', sizeof(sa));
-		sa.sa_handler =  _timer_entry;
-		sa.sa_flags |= SA_RESTART;
-		sigfillset( &sa.sa_mask);
+	    struct sigaction sa;
+	    memset(&sa, '\0', sizeof(sa));
+	    sa.sa_handler =  _timer_entry;
+	    sa.sa_flags |= SA_RESTART;
+	    sigfillset( &sa.sa_mask);
 
-		if ( sigaction(SIGALRM, &sa, 0) < 0 || sigaction(SIGTERM, &sa, 0) < 0)
-		{
-			return false;
-		}
-			
-		struct itimerval newval, oldval;
-		newval.it_value.tv_usec = 0;
-		if ( took / 1000 > 0 )
-		{
-			newval.it_value.tv_sec = took / 1000;
-			newval.it_value.tv_usec = (took % 1000) * 1000;
-		}
-		else
-		{
-			newval.it_value.tv_sec = 1;
-		}
+	    if ( sigaction(SIGALRM, &sa, 0) < 0 || sigaction(SIGTERM, &sa, 0) < 0)
+	    {
+		return false;
+	    }
 
-		newval.it_interval.tv_sec = 0;
-		newval.it_interval.tv_usec = 0;
+	    struct itimerval newval, oldval;
+	    newval.it_value.tv_usec = 0;
+	    if ( took / 1000 > 0 )
+	    {
+		newval.it_value.tv_sec = took / 1000;
+		newval.it_value.tv_usec = (took % 1000) * 1000;
+	    }
+	    else
+	    {
+		newval.it_value.tv_sec = 1;
+	    }
 
-		if ( ! once )
-		{
-			newval.it_interval.tv_sec = took / 1000;
-			newval.it_interval.tv_usec = (took % 1000) * 1000;
-		}
-		
-		if (setitimer( ITIMER_REAL, &newval, &oldval ) < 0)
-		{
-			return false;
-		}
-		timer_ = false;
-		return true;
+	    newval.it_interval.tv_sec = 0;
+	    newval.it_interval.tv_usec = 0;
+
+	    if ( ! once )
+	    {
+		newval.it_interval.tv_sec = took / 1000;
+		newval.it_interval.tv_usec = (took % 1000) * 1000;
+	    }
+
+	    if (setitimer( ITIMER_REAL, &newval, &oldval ) < 0)
+	    {
+		return false;
+	    }
+	    timer_ = false;
+	    return true;
 	}
 
 
@@ -241,72 +240,72 @@ namespace cactus
     inline void EventsPool::_register (int fd, types::events::Events event) throw ()
     {
 
-		utils::sys::setnonblock (fd);
-		epoll_event event_;
-		event_.data.fd = fd;
+	utils::sys::setnonblock (fd);
+	epoll_event event_;
+	event_.data.fd = fd;
 
-		if (event == types::events::READ)
-		{
-			event_.events = event_trigger_ | EPOLLIN;
-		}
-		else
-		{
-			event_.events = event_trigger_ | EPOLLOUT;
-		}
+	if (event == types::events::READ)
+	{
+	    event_.events = event_trigger_ | EPOLLIN;
+	}
+	else
+	{
+	    event_.events = event_trigger_ | EPOLLOUT;
+	}
 
-		epoll_ctl (epollfd_, EPOLL_CTL_ADD, fd, &event_);
+	epoll_ctl (epollfd_, EPOLL_CTL_ADD, fd, &event_);
+
+     }
+
+
+     void EventsPool::kill (const EventSon & son) throw ()
+     {
+	size_t fd = son.fd;
+	if ( son.type == types::events::READ )
+	{
+	    epoll_event event_;
+	    event_.data.fd = fd;
+	    event_.events = event_trigger_ | EPOLLIN;
+	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, son.fd, &event_);
+
+	    ifds_.erase(fd);
+	    iobservers_.erase(fd);
+	    if ( oobservers_.count(fd) <=0 )
+	    {
+		close(son.fd);
+	    }
+
+	    if ( son.object == types::events::TIMER )
+	    {
+		timer_ = false;
+		struct itimerval val;  
+		val.it_value.tv_sec = 0;  
+		val.it_value.tv_usec = 0;  
+		val.it_interval = val.it_value;  
+		setitimer(ITIMER_REAL, &val, 0);
+
+		event_.data.fd = SOCKFDS_TIMER[1];
+		event_.events = event_trigger_ | EPOLLOUT;
+		epoll_ctl (epollfd_, EPOLL_CTL_DEL, SOCKFDS_TIMER[1], &event_);
+
+	    }
+	}
+	else
+	{
+	    epoll_event event_;
+	    event_.data.fd = fd;
+	    event_.events = event_trigger_ | EPOLLOUT;
+	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, &event_);
+
+	    ofds_.erase(fd);
+	    oobservers_.erase(fd);
+	    if ( iobservers_.count(fd) <=0 )
+	    {
+		close(fd);
+	    }
+        }
 
     }
-
-
-	void EventsPool::kill (const EventSon & son) throw ()
-	{
-		size_t fd = son.fd;
-		if ( son.type == types::events::READ )
-		{
-			epoll_event event_;
-			event_.data.fd = fd;
-			event_.events = event_trigger_ | EPOLLIN;
-			epoll_ctl (epollfd_, EPOLL_CTL_DEL, son.fd, &event_);
-
-			ifds_.erase(fd);
-			iobservers_.erase(fd);
-			if ( oobservers_.count(fd) <=0 )
-			{
-				close(son.fd);
-			}
-
-			if ( son.object == types::events::TIMER )
-			{
-				timer_ = false;
-				struct itimerval val;  
-				val.it_value.tv_sec = 0;  
-				val.it_value.tv_usec = 0;  
-				val.it_interval = val.it_value;  
-				setitimer(ITIMER_REAL, &val, 0);
-				
-				event_.data.fd = SOCKFDS_TIMER[1];
-				event_.events = event_trigger_ | EPOLLOUT;
-				epoll_ctl (epollfd_, EPOLL_CTL_DEL, SOCKFDS_TIMER[1], &event_);
-
-			}
-		}
-		else
-		{
-			epoll_event event_;
-			event_.data.fd = fd;
-			event_.events = event_trigger_ | EPOLLOUT;
-			epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, &event_);
-
-			ofds_.erase(fd);
-			oobservers_.erase(fd);
-			if ( iobservers_.count(fd) <=0 )
-			{
-				close(fd);
-			}
-		}
-
-	}
 
 
 
@@ -403,12 +402,12 @@ namespace cactus
     void EventsPool::_remove (int fd) throw ()
     {
 
-		close (fd);
-		ifds_.erase (fd);
-		ofds_.erase (fd);
-		iobservers_.erase (fd);
-		oobservers_.erase (fd);
-		epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
+	close (fd);
+	ifds_.erase (fd);
+	ofds_.erase (fd);
+	iobservers_.erase (fd);
+	oobservers_.erase (fd);
+	epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
 
     }
 
@@ -416,30 +415,30 @@ namespace cactus
 
     void EventsPool::_clear () throw ()
     {
-		std::map < size_t, cactus::Event * >::iterator iter = iobservers_.begin ();
-		while (iter != iobservers_.end ())
-		{
-			int fd = iter->first;
-			close (fd);
-			iobservers_.erase (fd);
-			epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
-			++iter;
-		}
+	std::map < size_t, cactus::Event * >::iterator iter = iobservers_.begin ();
+	while (iter != iobservers_.end ())
+	{
+	    int fd = iter->first;
+	    close (fd);
+	    iobservers_.erase (fd);
+	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
+	    ++iter;
+	}
 
-		iter = oobservers_.begin ();
-		while (iter != oobservers_.end ())
-		{
-			int fd = iter->first;
-			close (fd);
-			oobservers_.erase (fd);
-			epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
-			++iter;
-		}
+	iter = oobservers_.begin ();
+	while (iter != oobservers_.end ())
+	{
+	    int fd = iter->first;
+	    close (fd);
+	    oobservers_.erase (fd);
+	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, 0);
+	    ++iter;
+	}
 
-		ifds_.clear ();
-		ofds_.clear ();
-		iobservers_.clear ();
-		oobservers_.clear ();
+	ifds_.clear ();
+	ofds_.clear ();
+	iobservers_.clear ();
+	oobservers_.clear ();
 
     }
 
