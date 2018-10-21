@@ -54,19 +54,18 @@ namespace cactus
       
 	public:
 	/*
-	   @note:common function callback differs from c++ class's member functIOn
+	* @note:common function callback differs from c++ class's member functIOn
 	*/
 	typedef void (*CommonCallback) (const EventSon & son);
-
+	
+        /*
+	* @desc:define the class member function as callback
+	* you can find detailed description about eventson in evnet.h
+	*/
 	typedef void (K::*ClassMethodCallback) (const EventSon & son);
 
-	IO ()
-	{;
-	}
-	IO (EventsPool & pool)
-	{
-	    pool.add (this);
-	}
+	IO (){;}
+	IO (EventsPool & pool) { pool.add (this); }
 
 	/*
 	 * @parameters:
@@ -92,8 +91,6 @@ namespace cactus
 		ofds_.insert (std::make_pair (fd, types::events::IO));
 	    }
 	}
-
-
 
 	/*
 	 * @parameters:
@@ -122,8 +119,6 @@ namespace cactus
 	    }
 	}
 
-
-
 	/*
 	 * @parameters:
 	 * pool: instance of events pool which was defined in file eventspool.h
@@ -134,16 +129,10 @@ namespace cactus
 	{
 	    pool.add (this);
 	}
-
-
+	
     private:
-
-	IO (const IO &)
-	{;
-	}
-	IO & operator = (const IO &)
-	{;
-	}
+	IO (const IO &) {;}
+	IO & operator = (const IO &) {;}
 
 	/*
 	 * @return:map<k,v> k represent the file descriptor, v represent the event object
@@ -154,8 +143,6 @@ namespace cactus
 	    return ifds_;
 	}
 
-
-
 	/*
 	 * @return:map<k,v> k represent the file descriptor, v represent the event object
 	 * @desc: get all of the registered output file descriptor
@@ -165,10 +152,8 @@ namespace cactus
 	    return ofds_;
 	}
 
-
-
 	/*
-	   @desc::execute the callback function registered on file descriptior when IO event has been triggered
+	 * @desc::execute the callback function registered on file descriptior when IO event has been triggered
 	 */
 	virtual void _execute (const EventSon & son) throw ()
 	{
@@ -183,7 +168,6 @@ namespace cactus
 			(*(iter->second)) (son);
 		    }
 		}
-
 		if (ikcbs_.size () > 0)
 		{
 		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
@@ -193,7 +177,6 @@ namespace cactus
 		    }
 		}
 	      }
-
 	      else
 	      {
 		    if (occbs_.size () > 0)
@@ -204,7 +187,6 @@ namespace cactus
 				(*(iter->second)) (son);
 			}
 		    }
-
 		    if (okcbs_.size () > 0)
 		    {
 			typename std::map < size_t, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
@@ -214,7 +196,6 @@ namespace cactus
 			}
 		    }
 	      }
-
 	}
 
       private:
@@ -232,13 +213,10 @@ namespace cactus
 
 	std::map < size_t, size_t >ifds_;
 	std::map < size_t, size_t >ofds_;
-
 	std::map < size_t, K * >iccbs_;
 	std::map < size_t, K * >occbs_;
-
 	std::map < size_t, ClassMethodCallback > ikcbs_;
 	std::map < size_t, ClassMethodCallback > okcbs_;
-
 	K *client_;
 
     };
