@@ -43,11 +43,10 @@
 
 namespace types
 {
-
     namespace events
     {
 	/*
-	   @note:enum constant for read and write event
+	 * @note:enum constant for read and write event
 	 */
 	enum Events
 	{
@@ -56,22 +55,17 @@ namespace types
 	    SIGNAL
 	};
 
-
 	/*
-	   @note:enum constant for io and async object
+	 * @note:enum constant for io and async object
 	 */
 	enum Objects
 	{
-	    IO=100,
+	    IO=10,
 	    ASYNC,
-		TIMER,
-		ANY
+	    TIMER,
+	    ANY
 	};
-
-
     }
-
-
 }
 
 #endif
