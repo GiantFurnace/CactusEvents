@@ -17,10 +17,9 @@ namespace utils
 {
     namespace net
     {
-
 	/*
-	   @parameters:address's correct format,eg.:localhost:1986
-	   @returns: 0 indicates address is valid,1 otherwise
+	 *  @parameters:address's correct format,eg.:localhost:1986
+	 *  @returns: 0 indicates address is valid,1 otherwise
 	 */
 	int checkAddress (const std::string & address)
 	{
@@ -85,8 +84,6 @@ namespace utils
 	    return error::code::SUCCESS;
 	}
 
-
-
 	int readBuffer (int fd, void *buffer, size_t bufferSize)
 	{
 	    size_t _left;
@@ -121,8 +118,6 @@ namespace utils
 	      }
 	    return (bufferSize - _left);
 	}
-
-
 
 	int writeBuffer (int fd, void *buffer, size_t bufferSize)
 	{
