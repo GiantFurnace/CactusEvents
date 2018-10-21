@@ -69,7 +69,6 @@ namespace cactus
 			types::events::Objects object;
 		};
 
-
 		 EventsPool () throw ();
 		~EventsPool () throw ();
 
