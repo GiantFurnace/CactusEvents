@@ -45,8 +45,6 @@
 #include <map>
 #include <pthread.h>
 
-
-
 namespace cactus
 {
     class EventSon;
@@ -58,62 +56,38 @@ namespace cactus
     {
 	friend class EventsPool;
     protected:
-	Event ()
-	{
-	    pthread_mutex_init (&mutex_, 0);
-	}
-	~Event ()
-	{
-	    pthread_mutex_destroy (&mutex_);
-	}
-	inline void _lock ()
-	{
-	    pthread_mutex_lock (&mutex_);
-	}
-	inline void _unlock ()
-	{
-	    pthread_mutex_unlock (&mutex_);
-	}
-
-	private:
-	Event (const Event &)
-	{;
-	}
-	Event & operator = (const Event &)
-	{;
-	}
-
+	Event () { pthread_mutex_init (&mutex_, 0); }
+	~Event () {  pthread_mutex_destroy (&mutex_); }
+	inline void _lock () { pthread_mutex_lock (&mutex_); }
+	inline void _unlock () { pthread_mutex_unlock (&mutex_); }
     private:
-	virtual std::map < size_t, size_t >_getifds () const
-	{
-	    return std::map < size_t, size_t >();
-	}
-	virtual std::map < size_t, size_t >_getofds () const
-	{
-	    return std::map < size_t, size_t >();
-	}
-	virtual void _execute ( const EventSon &)
-	{;
-	}
-
+	Event (const Event &){;}
+	Event & operator = (const Event &){;}
+    private:
+	virtual std::map < size_t, size_t >_getifds () const { return std::map < size_t, size_t >(); }
+	virtual std::map < size_t, size_t >_getofds () const { return std::map < size_t, size_t >(); }
+	virtual void _execute ( const EventSon &){;}
     private:
 	pthread_mutex_t mutex_;
-
     };
 
-	class EventSon
-	{
-	friend class EventsPool;
-	public:
-	    size_t fd;
-	    types::events::Events  type;
-	    types::events::Objects object;
-	    pthread_t tid;
-	    EventsPool * pool;
-	    int error;
-	    private:
-	    Event * _event;
-	};
+    /*
+    * @desc:event son is defined as the callback function's parameter,which store the file descriptor and 
+      the events type such as read or write, the event object such as IO, TIMER.
+    */
+    class EventSon
+    {
+        friend class EventsPool;
+    public:
+        size_t fd;
+        types::events::Events  type;
+        types::events::Objects object;
+        pthread_t tid;
+        EventsPool * pool;
+        int error;
+    private:
+        Event * _event;
+    };
 }
 
 #endif
