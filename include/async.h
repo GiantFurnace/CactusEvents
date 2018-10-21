@@ -48,39 +48,34 @@
 #include "eventspool.h"
 #include <map>
 #include <utility>
-#include <stdexcept>
-#include <string.h>
-#include <errno.h>
-extern int errno;
-
 
 namespace cactus
 {
-
     template < typename K >
     class Async:virtual public Event
     {
       public:
-
+        /*
+	* @desc:define the class member function as callback
+	* you can find detailed description about eventson in evnet.h
+	*/
 	typedef void (K::*ClassMethodCallback) ( const EventSon & son);
-
+	
 	Async ():pending_ (true)
 	{
 	    _initialize ();
 	}
-
+	
 	Async (EventsPool & pool)
 	{
 	    _initialize ();
 	    pool.add (this);
 	    pooltid_ = pool.gettid ();
 	}
-
-
-
+	
 	/*
-	   @desc:check if the socket pipe is pending for write
-	 */
+	* @desc:check if the socket pipe is pending for write
+	*/
 	inline bool pending () const
 	{
 	    return pending_;
@@ -90,7 +85,7 @@ namespace cactus
 	 * @parameters:
 	 * pool: instance of events pool which was defined in file eventspool.h
 	 * @return:void
-	 * @desc: join the events pool, the events pool monitor all of the events before startup the event loop
+	 * @desc: join the events pool, the events pool monitor all of the events:io,timer
 	 */
 	inline void join (EventsPool & pool)
 	{
@@ -98,10 +93,9 @@ namespace cactus
 	    pooltid_ = pool.gettid ();
 	}
 
-
 	/*
 	 * @desc: send the buffer to event loop, return the bytes that have been sent,
-	 *   write error occurred if returns -1
+	 * write error occurred if returns -1
 	 */
 	int send (void *buffer, size_t bufferSize)
 	{
@@ -113,21 +107,21 @@ namespace cactus
 	    {
 		Event::_lock ();
 	    }
-
+	    
 	    int bytes = 0;
 	    if (!pending_)
 	    {
 		bytes = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
 		pending_ = true;
 	    }
-
+	    
 	    if (!pthread_equal (tid_, pooltid_))
 	    {
 		Event::_unlock ();
 	    }
+	    
 	    return  bytes;
 	}
-
 
 	/*
 	 * @parameters:
@@ -141,8 +135,6 @@ namespace cactus
 	    iccbs_.erase (sockfds_[0]);
 	    iccbs_.insert (std::make_pair (sockfds_[0], client));
 	}
-
-
 
 	/*
 	 * @parameters:
@@ -158,28 +150,15 @@ namespace cactus
 	    ikcbs_.insert (std::make_pair (sockfds_[0], cb));
 	}
 
-
-
     private:
-	Async (const Async &)
-	{;
-	}
-	Async & operator = (const Async &)
-	{;
-	}
-
-	virtual std::map < size_t, size_t >_getifds () const
-	{
-	    return ifds_;
-	}
-	virtual std::map < size_t, size_t >_getofds () const
-	{
-	    return ofds_;
-	}
+	Async (const Async &){;}
+	Async & operator = (const Async &){;}
+	
+	virtual std::map < size_t, size_t >_getifds () const {  return ifds_; }
+	virtual std::map < size_t, size_t >_getofds () const {  return ofds_; }
 
 	inline void _initialize ()
 	{
-		
 	    tid_ = pthread_self ();
 	    pooltid_ = pthread_self ();
 	    int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, sockfds_);
@@ -187,19 +166,15 @@ namespace cactus
 	    {
 		throw std::runtime_error (strerror (errno));
 	    }
-
 	    ifds_.insert (std::make_pair (sockfds_[0], types::events::ASYNC));
 	    ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
 	}
 
-
-
 	/*
-	   @desc::execute the callback function registered on file descriptior when io event has been triggered
-	 */
+	* @desc::execute the callback function registered on file descriptior when io event has been triggered
+	*/
 	virtual void _execute (const EventSon & son) throw ()
 	{
-	
 	    pooltid_ = son.tid;
 	    if ( son.type == types::events::READ )
 	    {
@@ -251,12 +226,10 @@ namespace cactus
 	}
 
     private:
-	
 	std::map < size_t, size_t > ifds_;
 	std::map < size_t, size_t > ofds_;
 	std::map < size_t, K * >iccbs_;
 	std::map < size_t, ClassMethodCallback > ikcbs_;
-
 	bool pending_;
 	int sockfds_[2];
 	pthread_t tid_;
@@ -265,5 +238,4 @@ namespace cactus
     };
 
 }
-
 #endif
