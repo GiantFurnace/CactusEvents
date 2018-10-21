@@ -48,33 +48,23 @@
 #include "eventspool.h"
 #include <map>
 #include <utility>
-#include <stdexcept>
-#include <string.h>
-#include <errno.h>
 #include <pthread.h>
 #include <iostream>
-extern int errno;
-
 
 namespace cactus
 {
-
     template < typename K >
     class Timer:virtual public Event
     {
       public:
-
+	/*
+	* @desc:define the class member function as callback
+	* you can find detailed description about eventson in evnet.h
+	*/
 	typedef void (K::*ClassMethodCallback) (const EventSon &);
 
-	Timer ()
-	{;
-	}
-
-	Timer (EventsPool & pool)
-	{
-	    pool.add (this, types::events::TIMER);
-	}
-
+	Timer () {; }
+	Timer (EventsPool & pool) { pool.add (this, types::events::TIMER); }
 
 	/*
 	 * @parameters:
@@ -90,8 +80,6 @@ namespace cactus
 	    iccbs_.insert (std::make_pair (took, client));
 	}
 
-
-
 	/*
 	 * @parameters:
 	 * client: function object of template class
@@ -106,7 +94,6 @@ namespace cactus
 	    ikcbs_.insert (std::make_pair (took, cb));
 	    client_ = client;
 	}
-
 
 	/*
 	 * @parameters:
@@ -132,15 +119,12 @@ namespace cactus
 	{
 	    return ifds_;
 	}
-
 	
-
 	/*
-	   @desc::execute the callback function registered on file descriptior when io event has been triggered
+	 * @desc::execute the callback function registered on file descriptior when io event has been triggered
 	 */
 	virtual void _execute (const EventSon &son) throw ()
 	{
-
 	    if ( son.type == types::events::READ )
 	    {
 		if (iccbs_.size () > 0)
@@ -152,7 +136,6 @@ namespace cactus
 			++iter;
 		    }
 		}
-
 		if (ikcbs_.size () > 0)
 		{
 		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.begin();
@@ -162,9 +145,7 @@ namespace cactus
 			++iter;
 		    }
 		}
-
 	    }
-
 	}
 
     private:
@@ -173,7 +154,6 @@ namespace cactus
 	std::map < size_t, ClassMethodCallback > ikcbs_;
 	K * client_;
     };
-
 }
 
 #endif
