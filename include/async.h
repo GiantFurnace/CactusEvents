@@ -157,17 +157,18 @@ namespace cactus
 	virtual std::map < size_t, size_t >_getifds () const {  return ifds_; }
 	virtual std::map < size_t, size_t >_getofds () const {  return ofds_; }
 
-	inline void _initialize ()
+	inline bool _initialize () throw()
 	{
 	    tid_ = pthread_self ();
 	    pooltid_ = pthread_self ();
 	    int ret = socketpair (AF_UNIX, SOCK_STREAM, 0, sockfds_);
 	    if (ret < 0)
 	    {
-		throw std::runtime_error (strerror (errno));
+		return false;
 	    }
 	    ifds_.insert (std::make_pair (sockfds_[0], types::events::ASYNC));
 	    ofds_.insert (std::make_pair (sockfds_[1], types::events::ASYNC));
+            return true; 
 	}
 
 	/*
