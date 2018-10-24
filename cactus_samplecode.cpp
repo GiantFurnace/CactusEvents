@@ -43,80 +43,89 @@
 #include "timer.h"
 #include <iostream>
 
-int count = 0;
 
-class Callback
+namespace cactus
 {
-public:
+    class Callback
+    {
+    public:
+        Callback():count_(0) {;}
+        void operator  () (const cactus::EventSon & son)
+        {
+            int data;
+            utils::net::readBuffer (son.fd, &data, sizeof (data));
+            std::cout<<"functor callback has been triggered"<<std::endl;
+        }
 
-  void operator  () (const cactus::EventSon & son)
-  {
-    int data;
-    int bytes = utils::net::readBuffer (son.fd, &data, sizeof (data));
-    // std::cout<<"functor callback has been triggered"<<std::endl;
-  }
+       void asyncReadCallback (const cactus::EventSon & son)
+       {
+           int data;
+           utils::net::readBuffer (son.fd, &data, sizeof (data));
+           std::cout<<"member callback has been triggered"<<std::endl;
+       }
 
-  void asyncReadCallback (const cactus::EventSon & son)
-  {
-    int data;
-    int bytes = utils::net::readBuffer (son.fd, &data, sizeof (data));
-    //std::cout<<"member callback has been triggered"<<std::endl;
-  }
+       void newTimerCallback (const cactus::EventSon & son)
+       {
+           (void) son;
+           std::cout << "this is a new timer " << std::endl;
+       }
 
-  void newTimerCallback (const cactus::EventSon & son)
-  {
-    std::cout << "this is a new timer " << std::endl;
-  }
+       void oldTimerCallback (const cactus::EventSon & son)
+       {
+           ++count_;
+           std::cout << "this is a timer " << std::endl;
+           if (count_ > 10)
+           {
+	       (son.pool)->kill (son);
+	       timer_.set (2000, this, &Callback::newTimerCallback);
+	       timer_.join (*(son.pool));
+           }
+       }
 
-  void oldTimerCallback (const cactus::EventSon & son)
-  {
-    ++count;
-    std::cout << "this is a timer " << std::endl;
-    if (count > 10)
-      {
-	(son.pool)->kill (son);
-	timer.set (2000, this, &Callback::newTimerCallback);
-	timer.join (*(son.pool));
-      }
-  }
+    private:
+       cactus::Timer < Callback > timer_;
+       int count_;
 
-private:
-  cactus::Timer < Callback > timer;
+    };
+}
 
-};
 
-cactus::Async < Callback > async;
+
+cactus::Async < cactus::Callback > async;
 
 void * async_entry (void *arg)
 {
+  (void) arg;
   int data = 201314;
   while (true)
     {
       if (!async.pending ())
 	{
-	  int bytes = async.send (&data, sizeof (data));
+            async.send (&data, sizeof (data));
 	}
     }
+
+  return 0;
 }
 
 
 int main (int argc, char **argv)
 {
+  (void) argc;
+  (void) argv;
+
   pthread_t tid;
   pthread_create (&tid, 0, async_entry, 0);
-  Callback callback;
+  cactus::Callback callback;
   cactus::EventsPool eventPool;
 
   async.set (&callback);
-  async.set (&callback, &Callback::asyncReadCallback);
+  async.set (&callback, &cactus::Callback::asyncReadCallback);
   async.join (eventPool);
 
-  cactus::Timer < Callback > timer;
-  timer.set (800, &callback, &Callback::oldTimerCallback);
-  timer.join (eventPool);
-  timer.join (eventPool);
-  timer.join (eventPool);
-  timer.join (eventPool);
+  cactus::Timer < cactus::Callback > timer;
+  timer.set (800, &callback, &cactus::Callback::oldTimerCallback);
   timer.join (eventPool);
   eventPool.run (0);
+  return 0;
 }
