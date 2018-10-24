@@ -54,14 +54,14 @@ namespace cactus
         {
             int data;
             utils::net::readBuffer (son.fd, &data, sizeof (data));
-            std::cout<<"functor callback has been triggered"<<std::endl;
+            // std::cout<<"functor callback has been triggered"<<std::endl;
         }
 
        void asyncReadCallback (const cactus::EventSon & son)
        {
            int data;
            utils::net::readBuffer (son.fd, &data, sizeof (data));
-           std::cout<<"member callback has been triggered"<<std::endl;
+           // std::cout<<"member callback has been triggered"<<std::endl;
        }
 
        void newTimerCallback (const cactus::EventSon & son)
