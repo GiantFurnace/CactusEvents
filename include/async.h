@@ -97,7 +97,7 @@ namespace cactus
 	 * @desc: send the buffer to event loop, return the bytes that have been sent,
 	 * write error occurred if returns -1
 	 */
-	int send (void *buffer, size_t bufferSize)
+	ssize_t send (void *buffer, size_t bufferSize)
 	{
 	    tid_ = pthread_self ();
 	    /*
@@ -108,7 +108,7 @@ namespace cactus
 		Event::_lock ();
 	    }
 	    
-	    int bytes = 0;
+	    ssize_t bytes = 0;
 	    if (!pending_)
 	    {
 		bytes = utils::net::writeBuffer (sockfds_[1], buffer, bufferSize);
@@ -152,10 +152,10 @@ namespace cactus
 
     private:
 	Async (const Async &){;}
-	Async & operator = (const Async &){;}
+	Async & operator = (const Async &){ return *this; }
 	
-	virtual std::map < size_t, size_t >_getifds () const {  return ifds_; }
-	virtual std::map < size_t, size_t >_getofds () const {  return ofds_; }
+	virtual std::map < int, size_t >_getifds () const {  return ifds_; }
+	virtual std::map < int, size_t >_getofds () const {  return ofds_; }
 
 	inline bool _initialize () throw()
 	{
@@ -186,7 +186,7 @@ namespace cactus
 			
 		if (iccbs_.size () > 0)
 		{
-		    typename std::map < size_t, K * >::iterator iter = iccbs_.find (son.fd);
+		    typename std::map < int, K * >::iterator iter = iccbs_.find (son.fd);
 		    if (iter != iccbs_.end ())
 		    {
 			(*(iter->second)) (son);
@@ -195,7 +195,7 @@ namespace cactus
 
 		if (ikcbs_.size () > 0)
 		{
-		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (son.fd);
+		    typename std::map < int, ClassMethodCallback >::iterator iter = ikcbs_.find (son.fd);
 		    if (iter != ikcbs_.end ())
 		    {
 			(client_->*(iter->second)) (son);
@@ -227,10 +227,10 @@ namespace cactus
 	}
 
     private:
-	std::map < size_t, size_t > ifds_;
-	std::map < size_t, size_t > ofds_;
-	std::map < size_t, K * >iccbs_;
-	std::map < size_t, ClassMethodCallback > ikcbs_;
+	std::map < int, size_t > ifds_;
+	std::map < int, size_t > ofds_;
+	std::map < int, K * >iccbs_;
+	std::map < int, ClassMethodCallback > ikcbs_;
 	bool pending_;
 	int sockfds_[2];
 	pthread_t tid_;

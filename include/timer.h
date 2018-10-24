@@ -112,10 +112,11 @@ namespace cactus
 	}
 
 	Timer & operator = (const Timer &)
-	{;
+	{
+            return *this;
 	}
 
-	virtual std::map < size_t, size_t >_getifds () const
+	virtual std::map < int, size_t >_getifds () const
 	{
 	    return ifds_;
 	}
@@ -149,7 +150,7 @@ namespace cactus
 	}
 
     private:
-	std::map < size_t, size_t > ifds_;
+	std::map < int, size_t > ifds_;
 	std::map < size_t, K * >iccbs_;
 	std::map < size_t, ClassMethodCallback > ikcbs_;
 	K * client_;

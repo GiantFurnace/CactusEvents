@@ -24,16 +24,17 @@ namespace utils
 	    inet_ntop (AF_INET, &peerAddr.sin_addr, ip, INET_ADDRSTRLEN);
 	    return std::string (ip);
 	}
-	int readBuffer (int fd, void *, size_t);
-	int writeBuffer (int fd, void *, size_t);
+	ssize_t readBuffer (int fd, void *, size_t);
+	ssize_t writeBuffer (int fd, void *, size_t);
     } 
 
     namespace sys 
     {
-	inline int getSysProcessors () 
+	inline long int getSysProcessors () 
 	{
 	    return sysconf (_SC_NPROCESSORS_ONLN);
 	}
+
 	inline int setnonblock (int fd) 
 	{
 	    int option = fcntl (fd, F_GETFL);

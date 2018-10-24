@@ -91,7 +91,7 @@ namespace cactus
 	   
       private:
 	EventsPool (const EventsPool &) {;}
-	EventsPool & operator = (const EventsPool &) {;}
+	EventsPool & operator = (const EventsPool &) { return *this; }
 	bool _prepare () throw ();
 	inline void _register (int fd, types::events::Events event) throw ();
 	inline void _remove (int fd) throw ();
@@ -104,19 +104,19 @@ namespace cactus
 	    
 	std::vector <Item> observers_;
 	std::map<cactus::Event *, types::events::Objects> events_;
-	std::map < size_t, size_t >ifds_;
-	std::map < size_t, size_t >ofds_;
-	std::map < size_t, cactus::Event * >iobservers_;
-	std::map < size_t, cactus::Event * >oobservers_;
+	std::map < int, size_t >ifds_;
+	std::map < int, size_t >ofds_;
+	std::map < int, cactus::Event * >iobservers_;
+	std::map < int, cactus::Event * >oobservers_;
 	int epollfd_;
 	epoll_event epoll_events_[MAX_EVENTS_SIZE];
 	int status_;
 	int event_trigger_;
 	pthread_t tid_;
 	bool timer_;
-	size_t timerTook_;
 	size_t prevSize_;
 	size_t curSize_;
+	size_t timerTook_;
     };
 
 }

@@ -62,10 +62,10 @@ namespace cactus
 	inline void _unlock () { pthread_mutex_unlock (&mutex_); }
     private:
 	Event (const Event &){;}
-	Event & operator = (const Event &){;}
+	Event & operator = (const Event &){ return *this; }
     private:
-	virtual std::map < size_t, size_t >_getifds () const { return std::map < size_t, size_t >(); }
-	virtual std::map < size_t, size_t >_getofds () const { return std::map < size_t, size_t >(); }
+	virtual std::map < int, size_t >_getifds () const { return std::map < int, size_t >(); }
+	virtual std::map < int, size_t >_getofds () const { return std::map < int, size_t >(); }
 	virtual void _execute ( const EventSon &){;}
     private:
 	pthread_mutex_t mutex_;
@@ -79,7 +79,7 @@ namespace cactus
     {
         friend class EventsPool;
     public:
-        size_t fd;
+        int fd;
         types::events::Events  type;
         types::events::Objects object;
         pthread_t tid;

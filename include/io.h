@@ -74,7 +74,7 @@ namespace cactus
 	 * @return:void
 	 * @desc:set the class's function object as callback with specify fd and event( read or write )
 	 */
-	inline void set (size_t fd, types::events::Events event, K * client) throw ()
+	inline void set (int fd, types::events::Events event, K * client) throw ()
 	{
 	    if (event == types::events::READ)
 	    {
@@ -100,7 +100,7 @@ namespace cactus
 	 * @return:void
 	 * @desc:set the class's member function as callback with specify fd and event
 	 */
-	inline void set (size_t fd, types::events::Events event, K * client, ClassMethodCallback cb) throw ()
+	inline void set (int fd, types::events::Events event, K * client, ClassMethodCallback cb) throw ()
 	{
 	    client_ = client;
 	    if (event == types::events::READ)
@@ -132,13 +132,13 @@ namespace cactus
 	
     private:
 	IO (const IO &) {;}
-	IO & operator = (const IO &) {;}
+	IO & operator = (const IO &) { return *this; }
 
 	/*
 	 * @return:map<k,v> k represent the file descriptor, v represent the event object
 	 * @desc: get all of the registered input file descriptor 
 	 */
-	virtual std::map < size_t, size_t >_getifds () const
+	virtual std::map < int, size_t >_getifds () const
 	{
 	    return ifds_;
 	}
@@ -147,7 +147,7 @@ namespace cactus
 	 * @return:map<k,v> k represent the file descriptor, v represent the event object
 	 * @desc: get all of the registered output file descriptor
 	 */
-	virtual std::map < size_t, size_t >_getofds () const
+	virtual std::map < int, size_t >_getofds () const
 	{
 	    return ofds_;
 	}
@@ -162,7 +162,7 @@ namespace cactus
 	    {
 		if (iccbs_.size () > 0)
 		{
-		    typename std::map < size_t, K * >::iterator iter = iccbs_.find (fd);
+		    typename std::map < int, K * >::iterator iter = iccbs_.find (fd);
 		    if (iter != iccbs_.end ())
 		    {
 			(*(iter->second)) (son);
@@ -170,7 +170,7 @@ namespace cactus
 		}
 		if (ikcbs_.size () > 0)
 		{
-		    typename std::map < size_t, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
+		    typename std::map < int, ClassMethodCallback >::iterator iter = ikcbs_.find (fd);
 		    if (iter != ikcbs_.end ())
 		    {
 			(client_->*(iter->second)) (son);
@@ -181,7 +181,7 @@ namespace cactus
 	      {
 		    if (occbs_.size () > 0)
 		    {
-			typename std::map < size_t, K * >::iterator iter = occbs_.find (fd);
+			typename std::map < int, K * >::iterator iter = occbs_.find (fd);
 			if (iter != occbs_.end ())
 			{
 			    (*(iter->second)) (son);
@@ -189,7 +189,7 @@ namespace cactus
 		    }
 		    if (okcbs_.size () > 0)
 		    {
-			typename std::map < size_t, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
+			typename std::map < int, ClassMethodCallback >::iterator iter = okcbs_.find (fd);
 			if (iter != okcbs_.end ())
 			{
 			    (client_->*(iter->second)) (son);
@@ -211,12 +211,12 @@ namespace cactus
 	   '''
 	 */
 
-	std::map < size_t, size_t >ifds_;
-	std::map < size_t, size_t >ofds_;
-	std::map < size_t, K * >iccbs_;
-	std::map < size_t, K * >occbs_;
-	std::map < size_t, ClassMethodCallback > ikcbs_;
-	std::map < size_t, ClassMethodCallback > okcbs_;
+	std::map < int, size_t >ifds_;
+	std::map < int, size_t >ofds_;
+	std::map < int, K * >iccbs_;
+	std::map < int, K * >occbs_;
+	std::map < int, ClassMethodCallback > ikcbs_;
+	std::map < int, ClassMethodCallback > okcbs_;
 	K *client_;
 
     };
