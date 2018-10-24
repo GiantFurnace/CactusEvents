@@ -84,13 +84,13 @@ namespace utils
 	    return error::code::SUCCESS;
 	}
 
-	int readBuffer (int fd, void *buffer, size_t bufferSize)
+	ssize_t readBuffer (int fd, void *buffer, size_t bufferSize)
 	{
-	    size_t _left;
-	    int _received;
+	    ssize_t _left;
+	    ssize_t _received;
 	    uint8_t *_buffer;
 	    _buffer = (uint8_t *) buffer;
-	    _left = bufferSize;
+	    _left = static_cast<int>(bufferSize);
 	    while (true)
 	      {
 		  if ((_received = read (fd, _buffer, _left)) <= 0)
@@ -116,15 +116,15 @@ namespace utils
 		      break;
 		  _buffer += _received;
 	      }
-	    return (bufferSize - _left);
+	    return static_cast<ssize_t>(bufferSize - _left);
 	}
 
-	int writeBuffer (int fd, void *buffer, size_t bufferSize)
+	ssize_t writeBuffer (int fd, void *buffer, size_t bufferSize)
 	{
-	    size_t _left;
+	    ssize_t _left;
 	    ssize_t _sent;
 	    const uint8_t *_buffer = (const uint8_t *) buffer;
-	    _left = bufferSize;
+	    _left = static_cast<int> (bufferSize);
 	    while (true)
 	      {
 		  if ((_sent = write (fd, _buffer, _left)) <= 0)
@@ -150,7 +150,7 @@ namespace utils
 		      break;
 		  _buffer += _sent;
 	      }
-	    return bufferSize - _left;
+	    return static_cast<ssize_t> (bufferSize - _left);
 	}
     }
 };

@@ -61,8 +61,8 @@ namespace cactus
     */
     int SOCKFDS_TIMER[2];
 
-    EventsPool::EventsPool () throw ():epollfd_ (-1), status_ (0),timerTook_(0),
-	event_trigger_ (EPOLLET), timer_(false), prevSize_(0), curSize_(0)
+    EventsPool::EventsPool () throw ():epollfd_ (-1), status_ (0),
+	event_trigger_ (EPOLLET), timer_(false), prevSize_(0), curSize_(0),timerTook_(0)
     {
 	epollfd_ = epoll_create (1);
 	tid_ = pthread_self ();
@@ -75,7 +75,7 @@ namespace cactus
 
     bool EventsPool::_prepare () throw ()
     {
-	bool ret = true;
+	bool ok = true;
 	curSize_ = observers_.size();
 	size_t count = 0;
 	std::vector <Item>::reverse_iterator oiter = observers_.rbegin ();		
@@ -95,7 +95,7 @@ namespace cactus
 		    return false;
 		}
 
-		std::map < size_t, size_t >ifds_timer = ((*oiter).observer)->_getifds ();
+		std::map < int, size_t >ifds_timer = ((*oiter).observer)->_getifds ();
 		if ( ifds_timer.size() > 0 )
 		{
 					
@@ -115,8 +115,8 @@ namespace cactus
 		continue;
 		}
 
-		std::map < size_t, size_t >ifds = ((*oiter).observer)->_getifds ();
-		std::map < size_t, size_t >::iterator ifd = ifds.begin ();
+		std::map < int, size_t >ifds = ((*oiter).observer)->_getifds ();
+		std::map < int, size_t >::iterator ifd = ifds.begin ();
 
 		while (ifd != ifds.end ())
 		{
@@ -135,8 +135,8 @@ namespace cactus
 		    ++ifd;
 		}
 
-	      std::map < size_t, size_t >ofds =  ((*oiter).observer)->_getofds ();
-	      std::map < size_t, size_t >::iterator ofd = ofds.begin ();
+	      std::map < int, size_t >ofds =  ((*oiter).observer)->_getofds ();
+	      std::map < int, size_t >::iterator ofd = ofds.begin ();
 
 	      while (ofd != ofds.end ())
 	      {
@@ -165,10 +165,10 @@ namespace cactus
 	   prevSize_ = curSize_;
 	   if ( timer_ )
 	   {
-	        ret = _initialize_timer(timerTook_, false);
+	        ok = _initialize_timer(timerTook_, false);
 	   }
 		
-	   return ret;
+	   return ok;
     }
 
     void EventsPool::_timer_entry( int signo )
@@ -242,7 +242,7 @@ namespace cactus
 
      void EventsPool::kill (const EventSon & son) throw ()
      {
-	size_t fd = son.fd;
+	int fd = son.fd;
 	if ( son.type == types::events::READ )
 	{
 	    epoll_event event_;
@@ -291,16 +291,19 @@ namespace cactus
 
     void EventsPool::run (int status) throw ()
     {
+        if (status !=0 )
+        return;
+
 	if ( !_prepare () )
 	{
-		return;
+	    return;
 	}
 
 	tid_ = pthread_self ();
 
 	if (epollfd_ == -1)
 	{
-		return;
+	    return;
 	}
 
 	while (status_ == 0)
@@ -320,7 +323,7 @@ namespace cactus
 
 		    if (epoll_events_[index].events & EPOLLIN)
 		    {
-			std::map < size_t, size_t >::const_iterator iiter = ifds_.find (fd);
+			std::map < int, size_t >::const_iterator iiter = ifds_.find (fd);
 			if (iiter != ifds_.end ())
 			{
 			    if ( fd == SOCKFDS_TIMER[0] )
@@ -329,7 +332,7 @@ namespace cactus
 				char data;
 				utils::net::readBuffer(fd, &data, sizeof(data));
 			    }
-			    std::map < size_t, cactus::Event *>::const_iterator iter = iobservers_.find (fd);
+			    std::map < int, cactus::Event *>::const_iterator iter = iobservers_.find (fd);
 			    son.type = types::events::READ;
 			    son._event = iter->second;
 			    iter->second->_execute (son);
@@ -337,10 +340,10 @@ namespace cactus
 		    }
 		    else if (epoll_events_[index].events & EPOLLOUT)
 		    {
-			std::map < size_t, size_t >::const_iterator oiter = ofds_.find (fd);
+			std::map < int, size_t >::const_iterator oiter = ofds_.find (fd);
 			if (oiter != ofds_.end ())
 			{
-			    std::map < size_t, cactus::Event *>::const_iterator iter = oobservers_.find (fd);
+			    std::map < int, cactus::Event *>::const_iterator iter = oobservers_.find (fd);
 			    son.type = types::events::WRITE;
 			    son._event = iter->second;
 			    iter->second->_execute (son);
@@ -383,7 +386,7 @@ namespace cactus
 
     void EventsPool::_clear () throw ()
     {
-	std::map < size_t, cactus::Event * >::iterator iter = iobservers_.begin ();
+	std::map < int, cactus::Event * >::iterator iter = iobservers_.begin ();
 	while (iter != iobservers_.end ())
 	{
 	    int fd = iter->first;
