@@ -1,9 +1,10 @@
 #author:chenzhengqiang
-#generate date:2018/10/07 14:23:09
+#generate date:2018/10/22 15:24:45
 
 
 INCLUDE_DIR:=./include
 SOURCE_DIR:=./src
+LIB_DIR:=./lib
 
 SUFFIX:=cpp
 vpath %.h $(INCLUDE_DIR)
@@ -15,10 +16,12 @@ CC1:=g++
 #define the optimize level of compiler
 OLEVEL=0
 LDCONFIG:=-lpthread
-COMPILER_FLAGS=-pg -g -W -Wall -Wextra -Wconversion -Wshadow
-CFLAGS:=-O$(OLEVEL) $(COMPILER_FLAGS) $(LDCONFIG)
-OBJS:=cactus_samplecode utils eventspool 
+CFLAGS=-O$(OLEVEL) -pg -g -W -Wall -Wextra -Wconversion -Wshadow -fPIC
+OBJS:=cactus_samplecode utils eventspool
 OBJS:=$(foreach obj,$(OBJS),$(obj).o)
+
+LIB_OBJS:=utils eventspool
+LIB_OBJS:=$(foreach obj,$(LIB_OBJS),$(obj).o)
 
 INSTALL_DIR:=/usr/local/bin
 CONFIG_PATH:=
@@ -30,12 +33,13 @@ TAR_NAME=$(TARGET)-$(shell date +%Y%m%d)
 .PHONEY:install
 .PHONEY:test
 .PHONEY:tar
+.PHONEY:library
 
 all:$(TARGET)
 $(TARGET):$(OBJS)
-	$(CC1) -o $@ $^ $(CFLAGS)
+	$(CC1) -o $@ $^ -L$(LIB_DIR) $(LDCONFIG)
 $(OBJS):%.o:%.$(SUFFIX)
-	$(CC0) -o $@ -c $< -I$(INCLUDE_DIR)
+	$(CC0) -o $@ -c $< -I$(INCLUDE_DIR) $(CFLAGS)
 
 clean:
 	-rm -f *.o *.a *.so *.log *core* $(TARGET) *.tar.gz *.cppe *.out
@@ -46,7 +50,9 @@ install:
 	-rm -rf $(CONFIG_INSTALL_PATH)
 	-mkdir $(CONFIG_INSTALL_PATH)
 	-cp -f $(CONFIG_PATH)/* $(CONFIG_INSTALL_PATH)
-
+library:
+	$(CC1) -shared -o lib$(TARGET).so $(LIB_OBJS)
+	-mv lib$(TARGET).so $(LIB_DIR)
 test:
 	./$(TARGET)
 tar:
