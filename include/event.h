@@ -57,7 +57,7 @@ namespace cactus
 	friend class EventsPool;
     protected:
 	Event () { pthread_mutex_init (&mutex_, 0); }
-	~Event () {  pthread_mutex_destroy (&mutex_); }
+	virtual ~Event () {  pthread_mutex_destroy (&mutex_); }
 	inline void _lock () { pthread_mutex_lock (&mutex_); }
 	inline void _unlock () { pthread_mutex_unlock (&mutex_); }
     private:
