@@ -239,8 +239,32 @@ namespace cactus
 	epoll_ctl (epollfd_, EPOLL_CTL_ADD, fd, &event_);
      }
 
-
      void EventsPool::kill (const EventSon & son) throw ()
+     {
+	 _remove(son.fd);
+	 if ( son.object == types::events::TIMER )
+	 {
+             if ( timer_ )
+	     { 		      
+	         timer_ = false;
+	         struct itimerval val;  
+	         val.it_value.tv_sec = 0;  
+	         val.it_value.tv_usec = 0;  
+	         val.it_interval = val.it_value;  
+	         setitimer(ITIMER_REAL, &val, 0);
+		     
+		 epoll_event event_;    
+	         event_.data.fd = SOCKFDS_TIMER[0];
+	         event_.events = event_trigger_ | EPOLLIN;
+	         epoll_ctl (epollfd_, EPOLL_CTL_DEL, SOCKFDS_TIMER[0], &event_);
+	         event_.data.fd = SOCKFDS_TIMER[1];
+	         event_.events = event_trigger_ | EPOLLOUT;
+	         epoll_ctl (epollfd_, EPOLL_CTL_DEL, SOCKFDS_TIMER[1], &event_);
+	     }
+	 }
+     }
+	
+     void EventsPool::stop (const EventSon & son) throw ()
      {
 	int fd = son.fd;
 	if ( son.type == types::events::READ )
@@ -249,27 +273,17 @@ namespace cactus
 	    event_.data.fd = fd;
 	    event_.events = event_trigger_ | EPOLLIN;
 	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, son.fd, &event_);
-
-	    ifds_.erase(fd);
-	    iobservers_.erase(fd);
-	    if ( oobservers_.count(fd) <=0 )
-	    {
-		close(son.fd);
-	    }
-
 	    if ( son.object == types::events::TIMER )
 	    {
-		timer_ = false;
-		struct itimerval val;  
-		val.it_value.tv_sec = 0;  
-		val.it_value.tv_usec = 0;  
-		val.it_interval = val.it_value;  
-		setitimer(ITIMER_REAL, &val, 0);
-
-		event_.data.fd = SOCKFDS_TIMER[1];
-		event_.events = event_trigger_ | EPOLLOUT;
-		epoll_ctl (epollfd_, EPOLL_CTL_DEL, SOCKFDS_TIMER[1], &event_);
-
+		if (timer_)
+		{	
+		    timer_ = false;
+		    struct itimerval val;  
+		    val.it_value.tv_sec = 0;  
+		    val.it_value.tv_usec = 0;  
+		    val.it_interval = val.it_value;  
+		    setitimer(ITIMER_REAL, &val, 0);
+		}
 	    }
 	}
 	else
@@ -278,13 +292,6 @@ namespace cactus
 	    event_.data.fd = fd;
 	    event_.events = event_trigger_ | EPOLLOUT;
 	    epoll_ctl (epollfd_, EPOLL_CTL_DEL, fd, &event_);
-
-	    ofds_.erase(fd);
-	    oobservers_.erase(fd);
-	    if ( iobservers_.count(fd) <=0 )
-	    {
-		close(fd);
-	    }
         }
 
     }
@@ -374,7 +381,7 @@ namespace cactus
 	}	
     }
 
-    void EventsPool::_remove (int fd) throw ()
+    inline void EventsPool::_remove (int fd) throw ()
     {
 	close (fd);
 	ifds_.erase (fd);
