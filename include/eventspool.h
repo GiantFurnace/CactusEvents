@@ -88,6 +88,7 @@ namespace cactus
 	inline pthread_t gettid () const { return tid_; }
 	void run (int status = 0) throw ();
 	void kill( const EventSon & son) throw();
+	void stop( const EventSon & son) throw();
 	   
       private:
 	EventsPool (const EventsPool &) {;}
